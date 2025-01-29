@@ -670,8 +670,8 @@ impl<L, R> Either<L, R> {
         }
     }
 
-    /// Returns the contained [`Right`] value, otherwise converts the [`Left`]
-    /// value to `L`.
+    /// Returns the contained [`Right`] value,
+    /// otherwise converts the [`Left`] value to `L`.
     ///
     /// # Result
     ///
@@ -691,8 +691,8 @@ impl<L, R> Either<L, R> {
         }
     }
 
-    /// Returns the contained [`Left`] value, otherwise attempts to convert the
-    /// [`Right`] value to `L`.
+    /// Returns the contained [`Left`] value in [`OK`],
+    /// otherwise attempts to convert the [`Right`] value to `L`.
     ///
     /// # Errors
     ///
@@ -715,8 +715,8 @@ impl<L, R> Either<L, R> {
         }
     }
 
-    /// Returns the contained [`Right`] value, otherwise attempts to convert the
-    /// [`Left`] value to `R`.
+    /// Returns the contained [`Right`] value in [`OK`],
+    /// otherwise attempts to convert the [`Left`] value to `R`.
     ///
     /// # Errors
     ///
@@ -1077,7 +1077,6 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `r(x, ctx)` |
     #[inline]
     #[must_use]
-    #[doc(alias = "reduce")]
     pub fn fold_with<C, T, F, G>(self, ctx: C, l: F, r: G) -> T
     where
         F: FnOnce(L, C) -> T,

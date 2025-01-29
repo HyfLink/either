@@ -2,11 +2,12 @@
 name = "either"
 description = "a general purpose sum type with two cases"
 authors = ["Huang Yifan"]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
+repository = "https://github.com/HyfLink/either.git"
 
 [features]
-default = ["std", "serde"]
+default = ["std"]
 panic_immediate_abort = []
 serde = ["dep:serde", "serde/derive"]
 std = ["serde?/std"]
