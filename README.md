@@ -34,11 +34,11 @@ These methods extract the contained `Left` value in an `Either`. If the `Either`
 - `left_or_err` returns provided error contained in `Err`
 - `into_left` converts the right value to `L` (which requires `R` to implement `Int<L>`)
 - `try_into_left` attempts to convert the right value to `L` (which requires `R` to implement `TryInt<L>`)
-- `expect_left` panics with a provided custom message
-- `unwrap_left` panics with a generic message
-- `unwrap_left_or` returns the provided default value
-- `unwrap_left_or_else` returns the result of evaluating the provided function
-- `unwrap_left_or_default` returns the default value of the type `L` (which requires `L` to implement `Default`)
+- `left_expect` panics with a provided custom message
+- `left_unwrap` panics with a generic message
+- `left_unwrap_or` returns the provided default value
+- `left_unwrap_or_else` returns the result of evaluating the provided function
+- `left_unwrap_or_default` returns the default value of the type `L` (which requires `L` to implement `Default`)
 
 Also, there are symmetric methods that work with the `Right` variant.
 
@@ -58,10 +58,10 @@ The `map_with` and `fold_with` methods are the contextual version of the `map` a
 
 These methods transform the `Left` value by applying a function on it. If `Either` is `Right`:
 
-- `map_left` returns the `Right` value
-- `map_left_or` returns the provided default value
-- `map_left_or_else` returns the result of evaluating the provided function
-- `map_left_or_default` returns the default value of `L` (which requires `L` to implement `Default`)
+- `left_map` returns the `Right` value
+- `left_map_or` returns the provided default value
+- `left_map_or_else` returns the result of evaluating the provided function
+- `left_map_or_default` returns the default value of `L` (which requires `L` to implement `Default`)
 
 Also, there are symmetric methods that work with the `Right` variant.
 

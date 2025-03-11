@@ -20,6 +20,16 @@
 //! [representation]: core::result#representation
 
 #![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(
+    feature = "nightly",
+    feature(
+        async_fn_traits,
+        async_iterator,
+        fn_traits,
+        tuple_trait,
+        unboxed_closures,
+    )
+)]
 
 use core::fmt::Debug;
 use core::hint::unreachable_unchecked;
@@ -29,20 +39,25 @@ use core::ptr;
 
 use crate::Either::{Left, Right};
 
-mod clone;
-mod convert;
+pub mod borrow;
+pub mod clone;
+pub mod convert;
 #[cfg(feature = "serde")]
-mod de;
-mod error;
-mod fmt;
-mod future;
-mod hash;
+pub mod de;
+pub mod error;
+pub mod fmt;
+pub mod future;
+pub mod hash;
 #[cfg(feature = "std")]
-mod io;
-mod iter;
-mod ops;
+pub mod io;
+pub mod iter;
+#[cfg(feature = "nightly")]
+pub mod nightly;
+pub mod ops;
+pub mod option;
+pub mod result;
 #[cfg(feature = "serde")]
-mod ser;
+pub mod ser;
 
 /// The `enum` type with variants [`Left`] and [`Right`] is a general purpose
 /// sum type with two cases.
@@ -105,7 +120,7 @@ impl<L, R> Either<L, R> {
     /// assert!(x.is_left());
     /// ```
     #[inline]
-    #[must_use = "if you intended to assert that this has a value, consider `.unwrap_left()` instead"]
+    #[must_use = "if you intended to assert that this has a value, consider `.left_unwrap()` instead"]
     pub const fn is_left(&self) -> bool {
         matches!(self, Left(_))
     }
@@ -127,7 +142,7 @@ impl<L, R> Either<L, R> {
     /// assert!(x.is_right());
     /// ```
     #[inline]
-    #[must_use = "if you intended to assert that this has a value, consider `.unwrap_right()` instead"]
+    #[must_use = "if you intended to assert that this has a value, consider `.right_unwrap()` instead"]
     pub const fn is_right(&self) -> bool {
         matches!(self, Right(_))
     }
@@ -755,7 +770,7 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub fn expect_left(self, message: &str) -> L
+    pub fn left_expect(self, message: &str) -> L
     where
         R: Debug,
     {
@@ -781,7 +796,7 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub fn expect_right(self, message: &str) -> R
+    pub fn right_expect(self, message: &str) -> R
     where
         L: Debug,
     {
@@ -807,11 +822,11 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub fn unwrap_left(self) -> L
+    pub fn left_unwrap(self) -> L
     where
         R: Debug,
     {
-        self.expect_left("`Either::unwrap_left()` is called on `Right`")
+        self.left_expect("`Either::left_unwrap()` is called on `Right`")
     }
 
     /// Returns the contained [`Right`] value, consuming the [`Either`] value.
@@ -830,11 +845,11 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub fn unwrap_right(self) -> R
+    pub fn right_unwrap(self) -> R
     where
         L: Debug,
     {
-        self.expect_right("`Either::unwrap_right()` is called on `Left`")
+        self.right_expect("`Either::right_unwrap()` is called on `Left`")
     }
 
     /// Returns the contained [`Left`] value, consuming the [`Either`] value,
@@ -853,7 +868,7 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub unsafe fn unwrap_left_unchecked(self) -> L {
+    pub unsafe fn left_unwrap_unchecked(self) -> L {
         match self {
             Left(x) => x,
             // SAFETY: the safety contract must be upheld by the caller.
@@ -877,7 +892,7 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[track_caller]
-    pub unsafe fn unwrap_right_unchecked(self) -> R {
+    pub unsafe fn right_unwrap_unchecked(self) -> R {
         match self {
             // SAFETY: the safety contract must be upheld by the caller.
             Left(_) => unsafe { unreachable_unchecked() },
@@ -889,9 +904,9 @@ impl<L, R> Either<L, R> {
     ///
     /// Arguments passed to this function are eagerly evaluated; if you are
     /// passing the result of a function call, it is recommended to use
-    /// [`unwrap_left_or_else`], which is lazily evaluated.
+    /// [`left_unwrap_or_else`], which is lazily evaluated.
     ///
-    /// [`unwrap_left_or_else`]: Either::unwrap_left_or_else
+    /// [`left_unwrap_or_else`]: Either::left_unwrap_or_else
     ///
     /// # Result
     ///
@@ -901,7 +916,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `default` |
     #[inline]
     #[must_use]
-    pub fn unwrap_left_or(self, default: L) -> L {
+    pub fn left_unwrap_or(self, default: L) -> L {
         match self {
             Left(x) => x,
             Right(_) => default,
@@ -912,9 +927,9 @@ impl<L, R> Either<L, R> {
     ///
     /// Arguments passed to this function are eagerly evaluated; if you are
     /// passing the result of a function call, it is recommended to use
-    /// [`unwrap_right_or_else`], which is lazily evaluated.
+    /// [`right_unwrap_or_else`], which is lazily evaluated.
     ///
-    /// [`unwrap_right_or_else`]: Either::unwrap_right_or_else
+    /// [`right_unwrap_or_else`]: Either::right_unwrap_or_else
     ///
     /// # Result
     ///
@@ -924,7 +939,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `x`       |
     #[inline]
     #[must_use]
-    pub fn unwrap_right_or(self, default: R) -> R {
+    pub fn right_unwrap_or(self, default: R) -> R {
         match self {
             Left(_) => default,
             Right(x) => x,
@@ -942,7 +957,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `default(x)` |
     #[inline]
     #[must_use]
-    pub fn unwrap_left_or_else<F>(self, default: F) -> L
+    pub fn left_unwrap_or_else<F>(self, default: F) -> L
     where
         F: FnOnce(R) -> L,
     {
@@ -963,7 +978,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `x`          |
     #[inline]
     #[must_use]
-    pub fn unwrap_right_or_else<F>(self, default: F) -> R
+    pub fn right_unwrap_or_else<F>(self, default: F) -> R
     where
         F: FnOnce(L) -> R,
     {
@@ -983,7 +998,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `L::default()` |
     #[inline]
     #[must_use]
-    pub fn unwrap_left_or_default(self) -> L
+    pub fn left_unwrap_or_default(self) -> L
     where
         L: Default,
     {
@@ -1003,7 +1018,7 @@ impl<L, R> Either<L, R> {
     /// | `Left(x)`  | `R::default()` |
     #[inline]
     #[must_use]
-    pub fn unwrap_right_or_default(self) -> R
+    pub fn right_unwrap_or_default(self) -> R
     where
         R: Default,
     {
@@ -1155,7 +1170,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `Right(x)`   |
     #[inline]
     #[must_use]
-    pub fn map_left<T, F: FnOnce(L) -> T>(self, f: F) -> Either<T, R> {
+    pub fn left_map<T, F: FnOnce(L) -> T>(self, f: F) -> Either<T, R> {
         match self {
             Left(x) => Left(f(x)),
             Right(x) => Right(x),
@@ -1174,7 +1189,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `Right(f(x))` |
     #[inline]
     #[must_use]
-    pub fn map_right<T, F: FnOnce(R) -> T>(self, f: F) -> Either<L, T> {
+    pub fn right_map<T, F: FnOnce(R) -> T>(self, f: F) -> Either<L, T> {
         match self {
             Left(x) => Left(x),
             Right(x) => Right(f(x)),
@@ -1186,10 +1201,10 @@ impl<L, R> Either<L, R> {
     ///
     /// Arguments passed to this function are eagerly evaluated; if you are
     /// passing the result of a function call, it is recommended to use
-    /// [`fold`] and [`map_left_or_else`], which are lazily evaluated.
+    /// [`fold`] and [`left_map_or_else`], which are lazily evaluated.
     ///
     /// [`fold`]: Either::fold
-    /// [`map_left_or_else`]: Either::map_left_or_else
+    /// [`left_map_or_else`]: Either::left_map_or_else
     ///
     /// # Result
     ///
@@ -1199,7 +1214,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `default` |
     #[inline]
     #[must_use]
-    pub fn map_left_or<T, F: FnOnce(L) -> T>(self, default: T, f: F) -> T {
+    pub fn left_map_or<T, F: FnOnce(L) -> T>(self, default: T, f: F) -> T {
         match self {
             Left(x) => f(x),
             Right(_) => default,
@@ -1211,10 +1226,10 @@ impl<L, R> Either<L, R> {
     ///
     /// Arguments passed to this function are eagerly evaluated; if you are
     /// passing the result of a function call, it is recommended to use
-    /// [`fold`] and [`map_right_or_else`], which are lazily evaluated.
+    /// [`fold`] and [`right_map_or_else`], which are lazily evaluated.
     ///
     /// [`fold`]: Either::fold
-    /// [`map_right_or_else`]: Either::map_right_or_else
+    /// [`right_map_or_else`]: Either::right_map_or_else
     ///
     /// # Result
     ///
@@ -1224,7 +1239,7 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `f(x)`    |
     #[inline]
     #[must_use]
-    pub fn map_right_or<T, F: FnOnce(R) -> T>(self, default: T, f: F) -> T {
+    pub fn right_map_or<T, F: FnOnce(R) -> T>(self, default: T, f: F) -> T {
         match self {
             Left(_) => default,
             Right(x) => f(x),
@@ -1241,7 +1256,7 @@ impl<L, R> Either<L, R> {
     /// | `Left(x)`  | `f(x)`      |
     /// | `Right(x)` | `default()` |
     #[inline]
-    pub fn map_left_or_else<T, D, F>(self, default: D, f: F) -> T
+    pub fn left_map_or_else<T, D, F>(self, default: D, f: F) -> T
     where
         D: FnOnce() -> T,
         F: FnOnce(L) -> T,
@@ -1262,7 +1277,7 @@ impl<L, R> Either<L, R> {
     /// | `Left(x)`  | `default()` |
     /// | `Right(x)` | `f(x)`      |
     #[inline]
-    pub fn map_right_or_else<T, D, F>(self, default: D, f: F) -> T
+    pub fn right_map_or_else<T, D, F>(self, default: D, f: F) -> T
     where
         D: FnOnce() -> T,
         F: FnOnce(R) -> T,
@@ -1284,12 +1299,12 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `T::default()` |
     #[inline]
     #[must_use]
-    pub fn map_left_or_default<T, F>(self, f: F) -> T
+    pub fn left_map_or_default<T, F>(self, f: F) -> T
     where
         T: Default,
         F: FnOnce(L) -> T,
     {
-        self.map_left_or_else(T::default, f)
+        self.left_map_or_else(T::default, f)
     }
 
     /// Applies function `f` on the contained [`Right`] value,
@@ -1303,12 +1318,12 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `f(x)`         |
     #[inline]
     #[must_use]
-    pub fn map_right_or_default<T, F>(self, f: F) -> T
+    pub fn right_map_or_default<T, F>(self, f: F) -> T
     where
         T: Default,
         F: FnOnce(R) -> T,
     {
-        self.map_right_or_else(T::default, f)
+        self.right_map_or_else(T::default, f)
     }
 
     // /////////////////////////////////////////////////////////////////////////

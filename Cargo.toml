@@ -1,16 +1,20 @@
 [package]
 name = "either"
+version = "0.3.0"
+edition = "2024"
+rust-version = "1.85.0"
 description = "a general purpose sum type with two cases"
-authors = ["Huang Yifan"]
-version = "0.2.1"
-edition = "2021"
+authors = ["Huang Yifan <hyf_yifan@qq.com>"]
 repository = "https://github.com/HyfLink/either.git"
 
 [features]
 default = ["std"]
-panic_immediate_abort = []
-serde = ["dep:serde", "serde/derive"]
 std = ["serde?/std"]
+nightly = []
+panic_immediate_abort = []
+serde = ["dep:serde"]
 
 [dependencies]
-serde = { version = "1.0", default-features = false, optional = true }
+serde = { version = "1.0", default-features = false, optional = true, features = [
+    "derive",
+] }

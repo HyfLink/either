@@ -12,6 +12,16 @@ use serde::ser::{
 
 use crate::Either::{self, Left, Right};
 
+impl<L, R> Error for Either<L, R>
+where
+    L: Error,
+    R: Error,
+{
+    fn custom<T: Display>(msg: T) -> Self {
+        Left(L::custom(msg))
+    }
+}
+
 impl<L, R> Serializer for Either<L, R>
 where
     L: Serializer,
@@ -319,16 +329,6 @@ where
             Left(x) => x.is_human_readable(),
             Right(x) => x.is_human_readable(),
         }
-    }
-}
-
-impl<L, R> Error for Either<L, R>
-where
-    L: Error,
-    R: Error,
-{
-    fn custom<T: Display>(msg: T) -> Self {
-        Left(L::custom(msg))
     }
 }
 

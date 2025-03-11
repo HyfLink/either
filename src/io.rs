@@ -2,6 +2,7 @@
 //! traits for [`Either`], if and only if, both `L` and `R` implement the
 //! corresponding trait.
 
+use std::fmt::Arguments;
 use std::io::{self, BufRead, Read, Seek, Write};
 
 use crate::Either::{self, Left, Right};
@@ -174,7 +175,7 @@ where
     }
 
     #[inline]
-    fn write_fmt(&mut self, fmt: std::fmt::Arguments<'_>) -> io::Result<()> {
+    fn write_fmt(&mut self, fmt: Arguments<'_>) -> io::Result<()> {
         match self {
             Left(x) => x.write_fmt(fmt),
             Right(x) => x.write_fmt(fmt),

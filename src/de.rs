@@ -1,9 +1,9 @@
 //! This module implements the [`Deserializer`] trait for [`Either`].
-//! 
+//!
 //! That means, `Either<L, R>` is deserializer, if and only if, both `L` and `R`
 //! are deserializers.
 
-use core::fmt::{self, Display};
+use core::fmt::{self, Display, Formatter};
 
 use serde::de::{
     Deserialize, DeserializeSeed, Deserializer, EnumAccess, Error, Expected, MapAccess, SeqAccess,
@@ -11,6 +11,52 @@ use serde::de::{
 };
 
 use crate::Either::{self, Left, Right};
+
+impl<L, R> Error for Either<L, R>
+where
+    L: Error,
+    R: Error,
+{
+    #[inline]
+    fn custom<T: Display>(msg: T) -> Self {
+        Left(L::custom(msg))
+    }
+
+    #[inline]
+    fn invalid_type(unexp: Unexpected, exp: &dyn Expected) -> Self {
+        Left(L::invalid_type(unexp, exp))
+    }
+
+    #[inline]
+    fn invalid_value(unexp: Unexpected, exp: &dyn Expected) -> Self {
+        Left(L::invalid_value(unexp, exp))
+    }
+
+    #[inline]
+    fn invalid_length(len: usize, exp: &dyn Expected) -> Self {
+        Left(L::invalid_length(len, exp))
+    }
+
+    #[inline]
+    fn unknown_variant(variant: &str, expected: &'static [&'static str]) -> Self {
+        Left(L::unknown_variant(variant, expected))
+    }
+
+    #[inline]
+    fn unknown_field(field: &str, expected: &'static [&'static str]) -> Self {
+        Left(L::unknown_field(field, expected))
+    }
+
+    #[inline]
+    fn missing_field(field: &'static str) -> Self {
+        Left(L::missing_field(field))
+    }
+
+    #[inline]
+    fn duplicate_field(field: &'static str) -> Self {
+        Left(L::duplicate_field(field))
+    }
+}
 
 impl<'de, L, R> Deserializer<'de> for Either<L, R>
 where
@@ -79,6 +125,16 @@ where
         }
     }
 
+    fn deserialize_i128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: Visitor<'de>,
+    {
+        match self {
+            Left(x) => x.deserialize_i128(visitor).map_err(Left),
+            Right(x) => x.deserialize_i128(visitor).map_err(Right),
+        }
+    }
+
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: Visitor<'de>,
@@ -116,6 +172,16 @@ where
         match self {
             Left(x) => x.deserialize_u64(visitor).map_err(Left),
             Right(x) => x.deserialize_u64(visitor).map_err(Right),
+        }
+    }
+
+    fn deserialize_u128<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: Visitor<'de>,
+    {
+        match self {
+            Left(x) => x.deserialize_u128(visitor).map_err(Left),
+            Right(x) => x.deserialize_u128(visitor).map_err(Right),
         }
     }
 
@@ -333,6 +399,32 @@ where
             Right(x) => x.deserialize_ignored_any(visitor).map_err(Right),
         }
     }
+
+    fn is_human_readable(&self) -> bool {
+        match self {
+            Left(x) => x.is_human_readable(),
+            Right(x) => x.is_human_readable(),
+        }
+    }
+}
+
+impl<'de, L, R> DeserializeSeed<'de> for Either<L, R>
+where
+    L: DeserializeSeed<'de>,
+    R: DeserializeSeed<'de>,
+{
+    type Value = Either<L::Value, R::Value>;
+
+    #[inline]
+    fn deserialize<D>(self, deserializer: D) -> Result<Self::Value, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        match self {
+            Left(x) => x.deserialize(deserializer).map(Left),
+            Right(x) => x.deserialize(deserializer).map(Right),
+        }
+    }
 }
 
 impl<'de, L, R> Visitor<'de> for Either<L, R>
@@ -342,154 +434,217 @@ where
 {
     type Value = Either<L::Value, R::Value>;
 
-    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn expecting(&self, formatter: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Left(x) => x.expecting(formatter),
             Right(x) => x.expecting(formatter),
         }
     }
 
-    fn visit_bool<E: Error>(self, v: bool) -> Result<Self::Value, E> {
+    fn visit_bool<E>(self, v: bool) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_bool(v).map(Left),
             Right(x) => x.visit_bool(v).map(Right),
         }
     }
 
-    fn visit_i8<E: Error>(self, v: i8) -> Result<Self::Value, E> {
+    fn visit_i8<E>(self, v: i8) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_i8(v).map(Left),
             Right(x) => x.visit_i8(v).map(Right),
         }
     }
 
-    fn visit_i16<E: Error>(self, v: i16) -> Result<Self::Value, E> {
+    fn visit_i16<E>(self, v: i16) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_i16(v).map(Left),
             Right(x) => x.visit_i16(v).map(Right),
         }
     }
 
-    fn visit_i32<E: Error>(self, v: i32) -> Result<Self::Value, E> {
+    fn visit_i32<E>(self, v: i32) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_i32(v).map(Left),
             Right(x) => x.visit_i32(v).map(Right),
         }
     }
 
-    fn visit_i64<E: Error>(self, v: i64) -> Result<Self::Value, E> {
+    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_i64(v).map(Left),
             Right(x) => x.visit_i64(v).map(Right),
         }
     }
 
-    fn visit_i128<E: Error>(self, v: i128) -> Result<Self::Value, E> {
+    fn visit_i128<E>(self, v: i128) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_i128(v).map(Left),
             Right(x) => x.visit_i128(v).map(Right),
         }
     }
 
-    fn visit_u8<E: Error>(self, v: u8) -> Result<Self::Value, E> {
+    fn visit_u8<E>(self, v: u8) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_u8(v).map(Left),
             Right(x) => x.visit_u8(v).map(Right),
         }
     }
 
-    fn visit_u16<E: Error>(self, v: u16) -> Result<Self::Value, E> {
+    fn visit_u16<E>(self, v: u16) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_u16(v).map(Left),
             Right(x) => x.visit_u16(v).map(Right),
         }
     }
 
-    fn visit_u32<E: Error>(self, v: u32) -> Result<Self::Value, E> {
+    fn visit_u32<E>(self, v: u32) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_u32(v).map(Left),
             Right(x) => x.visit_u32(v).map(Right),
         }
     }
 
-    fn visit_u64<E: Error>(self, v: u64) -> Result<Self::Value, E> {
+    fn visit_u64<E>(self, v: u64) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_u64(v).map(Left),
             Right(x) => x.visit_u64(v).map(Right),
         }
     }
 
-    fn visit_u128<E: Error>(self, v: u128) -> Result<Self::Value, E> {
+    fn visit_u128<E>(self, v: u128) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_u128(v).map(Left),
             Right(x) => x.visit_u128(v).map(Right),
         }
     }
 
-    fn visit_f32<E: Error>(self, v: f32) -> Result<Self::Value, E> {
+    fn visit_f32<E>(self, v: f32) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_f32(v).map(Left),
             Right(x) => x.visit_f32(v).map(Right),
         }
     }
 
-    fn visit_f64<E: Error>(self, v: f64) -> Result<Self::Value, E> {
+    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_f64(v).map(Left),
             Right(x) => x.visit_f64(v).map(Right),
         }
     }
 
-    fn visit_char<E: Error>(self, v: char) -> Result<Self::Value, E> {
+    fn visit_char<E>(self, v: char) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_char(v).map(Left),
             Right(x) => x.visit_char(v).map(Right),
         }
     }
 
-    fn visit_str<E: Error>(self, v: &str) -> Result<Self::Value, E> {
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_str(v).map(Left),
             Right(x) => x.visit_str(v).map(Right),
         }
     }
 
-    fn visit_borrowed_str<E: Error>(self, v: &'de str) -> Result<Self::Value, E> {
+    fn visit_borrowed_str<E>(self, v: &'de str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_borrowed_str(v).map(Left),
             Right(x) => x.visit_borrowed_str(v).map(Right),
         }
     }
 
-    fn visit_string<E: Error>(self, v: String) -> Result<Self::Value, E> {
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_string(v).map(Left),
             Right(x) => x.visit_string(v).map(Right),
         }
     }
 
-    fn visit_bytes<E: Error>(self, v: &[u8]) -> Result<Self::Value, E> {
+    fn visit_bytes<E>(self, v: &[u8]) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_bytes(v).map(Left),
             Right(x) => x.visit_bytes(v).map(Right),
         }
     }
 
-    fn visit_borrowed_bytes<E: Error>(self, v: &'de [u8]) -> Result<Self::Value, E> {
+    fn visit_borrowed_bytes<E>(self, v: &'de [u8]) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_borrowed_bytes(v).map(Left),
             Right(x) => x.visit_borrowed_bytes(v).map(Right),
         }
     }
 
-    fn visit_byte_buf<E: Error>(self, v: Vec<u8>) -> Result<Self::Value, E> {
+    fn visit_byte_buf<E>(self, v: Vec<u8>) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_byte_buf(v).map(Left),
             Right(x) => x.visit_byte_buf(v).map(Right),
         }
     }
 
-    fn visit_none<E: Error>(self) -> Result<Self::Value, E> {
+    fn visit_none<E>(self) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_none().map(Left),
             Right(x) => x.visit_none().map(Right),
@@ -506,7 +661,10 @@ where
         }
     }
 
-    fn visit_unit<E: Error>(self) -> Result<Self::Value, E> {
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
         match self {
             Left(x) => x.visit_unit().map(Left),
             Right(x) => x.visit_unit().map(Right),
@@ -596,13 +754,23 @@ where
 {
     type Error = Either<L::Error, R::Error>;
 
-    fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>, Self::Error>
+    fn next_key_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>, Self::Error>
     where
-        K: DeserializeSeed<'de>,
+        T: DeserializeSeed<'de>,
     {
         match self {
             Left(x) => x.next_key_seed(seed).map_err(Left),
             Right(x) => x.next_key_seed(seed).map_err(Right),
+        }
+    }
+
+    fn next_key<T>(&mut self) -> Result<Option<T>, Self::Error>
+    where
+        T: Deserialize<'de>,
+    {
+        match self {
+            Left(x) => x.next_key().map_err(Left),
+            Right(x) => x.next_key().map_err(Right),
         }
     }
 
@@ -613,6 +781,16 @@ where
         match self {
             Left(x) => x.next_value_seed(seed).map_err(Left),
             Right(x) => x.next_value_seed(seed).map_err(Right),
+        }
+    }
+
+    fn next_value<T>(&mut self) -> Result<T, Self::Error>
+    where
+        T: Deserialize<'de>,
+    {
+        match self {
+            Left(x) => x.next_value().map_err(Left),
+            Right(x) => x.next_value().map_err(Right),
         }
     }
 
@@ -628,26 +806,6 @@ where
         match self {
             Left(x) => x.next_entry_seed(kseed, vseed).map_err(Left),
             Right(x) => x.next_entry_seed(kseed, vseed).map_err(Right),
-        }
-    }
-
-    fn next_key<K>(&mut self) -> Result<Option<K>, Self::Error>
-    where
-        K: Deserialize<'de>,
-    {
-        match self {
-            Left(x) => x.next_key().map_err(Left),
-            Right(x) => x.next_key().map_err(Right),
-        }
-    }
-
-    fn next_value<V>(&mut self) -> Result<V, Self::Error>
-    where
-        V: Deserialize<'de>,
-    {
-        match self {
-            Left(x) => x.next_value().map_err(Left),
-            Right(x) => x.next_value().map_err(Right),
         }
     }
 
@@ -767,43 +925,5 @@ where
             Left(x) => x.struct_variant(fields, visitor).map_err(Left),
             Right(x) => x.struct_variant(fields, visitor).map_err(Right),
         }
-    }
-}
-
-impl<L, R> Error for Either<L, R>
-where
-    L: Error,
-    R: Error,
-{
-    fn custom<T: Display>(msg: T) -> Self {
-        Left(L::custom(msg))
-    }
-
-    fn invalid_type(unexp: Unexpected, exp: &dyn Expected) -> Self {
-        Left(L::invalid_type(unexp, exp))
-    }
-
-    fn invalid_value(unexp: Unexpected, exp: &dyn Expected) -> Self {
-        Left(L::invalid_value(unexp, exp))
-    }
-
-    fn invalid_length(len: usize, exp: &dyn Expected) -> Self {
-        Left(L::invalid_length(len, exp))
-    }
-
-    fn unknown_variant(variant: &str, expected: &'static [&'static str]) -> Self {
-        Left(L::unknown_variant(variant, expected))
-    }
-
-    fn unknown_field(field: &str, expected: &'static [&'static str]) -> Self {
-        Left(L::unknown_field(field, expected))
-    }
-
-    fn missing_field(field: &'static str) -> Self {
-        Left(L::missing_field(field))
-    }
-
-    fn duplicate_field(field: &'static str) -> Self {
-        Left(L::duplicate_field(field))
     }
 }

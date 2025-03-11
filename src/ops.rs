@@ -88,15 +88,15 @@ where
 impl<L, R> Neg for Either<L, R>
 where
     L: Neg,
-    R: Neg,
+    R: Neg<Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn neg(self) -> Self::Output {
         match self {
-            Left(x) => Left(x.neg()),
-            Right(x) => Right(x.neg()),
+            Left(x) => x.neg(),
+            Right(x) => x.neg(),
         }
     }
 }
@@ -104,15 +104,15 @@ where
 impl<L, R> Not for Either<L, R>
 where
     L: Not,
-    R: Not,
+    R: Not<Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn not(self) -> Self::Output {
         match self {
-            Left(x) => Left(x.not()),
-            Right(x) => Right(x.not()),
+            Left(x) => x.not(),
+            Right(x) => x.not(),
         }
     }
 }
@@ -120,15 +120,15 @@ where
 impl<L, R, T> Add<T> for Either<L, R>
 where
     L: Add<T>,
-    R: Add<T>,
+    R: Add<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn add(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.add(rhs)),
-            Right(x) => Right(x.add(rhs)),
+            Left(x) => x.add(rhs),
+            Right(x) => x.add(rhs),
         }
     }
 }
@@ -136,15 +136,15 @@ where
 impl<L, R, T> Sub<T> for Either<L, R>
 where
     L: Sub<T>,
-    R: Sub<T>,
+    R: Sub<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn sub(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.sub(rhs)),
-            Right(x) => Right(x.sub(rhs)),
+            Left(x) => x.sub(rhs),
+            Right(x) => x.sub(rhs),
         }
     }
 }
@@ -152,15 +152,15 @@ where
 impl<L, R, T> Mul<T> for Either<L, R>
 where
     L: Mul<T>,
-    R: Mul<T>,
+    R: Mul<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn mul(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.mul(rhs)),
-            Right(x) => Right(x.mul(rhs)),
+            Left(x) => x.mul(rhs),
+            Right(x) => x.mul(rhs),
         }
     }
 }
@@ -168,15 +168,15 @@ where
 impl<L, R, T> Div<T> for Either<L, R>
 where
     L: Div<T>,
-    R: Div<T>,
+    R: Div<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn div(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.div(rhs)),
-            Right(x) => Right(x.div(rhs)),
+            Left(x) => x.div(rhs),
+            Right(x) => x.div(rhs),
         }
     }
 }
@@ -184,15 +184,15 @@ where
 impl<L, R, T> Rem<T> for Either<L, R>
 where
     L: Rem<T>,
-    R: Rem<T>,
+    R: Rem<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn rem(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.rem(rhs)),
-            Right(x) => Right(x.rem(rhs)),
+            Left(x) => x.rem(rhs),
+            Right(x) => x.rem(rhs),
         }
     }
 }
@@ -200,15 +200,15 @@ where
 impl<L, R, T> Shl<T> for Either<L, R>
 where
     L: Shl<T>,
-    R: Shl<T>,
+    R: Shl<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn shl(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.shl(rhs)),
-            Right(x) => Right(x.shl(rhs)),
+            Left(x) => x.shl(rhs),
+            Right(x) => x.shl(rhs),
         }
     }
 }
@@ -216,15 +216,15 @@ where
 impl<L, R, T> Shr<T> for Either<L, R>
 where
     L: Shr<T>,
-    R: Shr<T>,
+    R: Shr<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn shr(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.shr(rhs)),
-            Right(x) => Right(x.shr(rhs)),
+            Left(x) => x.shr(rhs),
+            Right(x) => x.shr(rhs),
         }
     }
 }
@@ -232,15 +232,15 @@ where
 impl<L, R, T> BitAnd<T> for Either<L, R>
 where
     L: BitAnd<T>,
-    R: BitAnd<T>,
+    R: BitAnd<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn bitand(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.bitand(rhs)),
-            Right(x) => Right(x.bitand(rhs)),
+            Left(x) => x.bitand(rhs),
+            Right(x) => x.bitand(rhs),
         }
     }
 }
@@ -248,15 +248,15 @@ where
 impl<L, R, T> BitOr<T> for Either<L, R>
 where
     L: BitOr<T>,
-    R: BitOr<T>,
+    R: BitOr<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn bitor(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.bitor(rhs)),
-            Right(x) => Right(x.bitor(rhs)),
+            Left(x) => x.bitor(rhs),
+            Right(x) => x.bitor(rhs),
         }
     }
 }
@@ -264,15 +264,15 @@ where
 impl<L, R, T> BitXor<T> for Either<L, R>
 where
     L: BitXor<T>,
-    R: BitXor<T>,
+    R: BitXor<T, Output = L::Output>,
 {
-    type Output = Either<L::Output, R::Output>;
+    type Output = L::Output;
 
     #[inline]
     fn bitxor(self, rhs: T) -> Self::Output {
         match self {
-            Left(x) => Left(x.bitxor(rhs)),
-            Right(x) => Right(x.bitxor(rhs)),
+            Left(x) => x.bitxor(rhs),
+            Right(x) => x.bitxor(rhs),
         }
     }
 }
