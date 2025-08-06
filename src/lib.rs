@@ -1338,7 +1338,7 @@ impl<L, R> Either<L, R> {
     /// [`left_and_then`] (alias `right_or_else`), which is lazily evaluated.
     ///
     /// [`left_and_then`]: Either::left_and_then
-    ///   
+    ///
     /// # Result
     ///
     /// | `self`     | `other`    | Output              |
@@ -1365,7 +1365,7 @@ impl<L, R> Either<L, R> {
     /// [`right_and_then`] (alias `left_or_else`), which is lazily evaluated.
     ///
     /// [`right_and_then`]: Either::right_and_then
-    ///   
+    ///
     /// # Result
     ///
     /// | `self`     | `other`    | Output              |
@@ -1386,7 +1386,7 @@ impl<L, R> Either<L, R> {
 
     /// Applies function `f` on the contained [`Left`] value,
     /// otherwise returns the contained [`Right`] value.
-    ///    
+    ///
     /// # Result
     ///
     /// | `self`     | Output     |
@@ -1731,7 +1731,7 @@ impl<L, R> Either<&mut L, &mut R> {
 #[inline]
 #[cold]
 #[track_caller]
-fn unwrap_failed<T>(_message: &str, _error: &T) -> ! {
+const fn unwrap_failed<T>(_message: &str, _error: &T) -> ! {
     panic!()
 }
 
