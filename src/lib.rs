@@ -734,7 +734,7 @@ impl<L, R> Either<L, R> {
         }
     }
 
-    /// Returns the contained [`Left`] value in [`OK`],
+    /// Returns the contained [`Left`] value in [`Ok`],
     /// otherwise attempts to convert the [`Right`] value to `L`.
     ///
     /// # Errors
@@ -758,7 +758,7 @@ impl<L, R> Either<L, R> {
         }
     }
 
-    /// Returns the contained [`Right`] value in [`OK`],
+    /// Returns the contained [`Right`] value in [`Ok`],
     /// otherwise attempts to convert the [`Left`] value to `R`.
     ///
     /// # Errors
