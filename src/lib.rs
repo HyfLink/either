@@ -20,20 +20,10 @@
 //! [representation]: core::result#representation
 
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(
-    feature = "nightly",
-    feature(
-        async_fn_traits,
-        async_iterator,
-        fn_traits,
-        tuple_trait,
-        unboxed_closures,
-    )
-)]
 
 use core::fmt::Debug;
 use core::hint::unreachable_unchecked;
-use core::ops::{Deref, DerefMut};
+use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::pin::Pin;
 use core::ptr;
 
@@ -51,8 +41,6 @@ pub mod hash;
 #[cfg(feature = "std")]
 pub mod io;
 pub mod iter;
-#[cfg(feature = "nightly")]
-pub mod nightly;
 pub mod ops;
 pub mod option;
 pub mod result;
@@ -318,6 +306,46 @@ impl<L, R> Either<L, R> {
         match self {
             Left(x) => Left(x),
             Right(x) => Right(x),
+        }
+    }
+
+    /// Performs indexing operation on the value.
+    ///
+    /// # Result
+    ///
+    /// | Input      | Output                  |
+    /// | ---------- | ----------------------- |
+    /// | `Left(x)`  | `Left(x.index(index))`  |
+    /// | `Right(x)` | `Right(x.index(index))` |
+    #[must_use]
+    pub fn get<I>(&self, index: I) -> Either<&L::Output, &R::Output>
+    where
+        L: Index<I>,
+        R: Index<I>,
+    {
+        match self {
+            Left(l) => Left(l.index(index)),
+            Right(r) => Right(r.index(index)),
+        }
+    }
+
+    /// Performs indexing operation on the value.
+    ///
+    /// # Result
+    ///
+    /// | Input      | Output                      |
+    /// | ---------- | --------------------------- |
+    /// | `Left(x)`  | `Left(x.index_mut(index))`  |
+    /// | `Right(x)` | `Right(x.index_mut(index))` |
+    #[must_use]
+    pub fn get_mut<I>(&mut self, index: I) -> Either<&mut L::Output, &mut R::Output>
+    where
+        L: IndexMut<I>,
+        R: IndexMut<I>,
+    {
+        match self {
+            Left(l) => Left(l.index_mut(index)),
+            Right(r) => Right(r.index_mut(index)),
         }
     }
 
@@ -1170,7 +1198,10 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `Right(x)`   |
     #[inline]
     #[must_use]
-    pub fn left_map<T, F: FnOnce(L) -> T>(self, f: F) -> Either<T, R> {
+    pub fn left_map<T, F>(self, f: F) -> Either<T, R>
+    where
+        F: FnOnce(L) -> T,
+    {
         match self {
             Left(x) => Left(f(x)),
             Right(x) => Right(x),
@@ -1189,7 +1220,10 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `Right(f(x))` |
     #[inline]
     #[must_use]
-    pub fn right_map<T, F: FnOnce(R) -> T>(self, f: F) -> Either<L, T> {
+    pub fn right_map<T, F>(self, f: F) -> Either<L, T>
+    where
+        F: FnOnce(R) -> T,
+    {
         match self {
             Left(x) => Left(x),
             Right(x) => Right(f(x)),
@@ -1214,7 +1248,10 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `default` |
     #[inline]
     #[must_use]
-    pub fn left_map_or<T, F: FnOnce(L) -> T>(self, default: T, f: F) -> T {
+    pub fn left_map_or<T, F>(self, default: T, f: F) -> T
+    where
+        F: FnOnce(L) -> T,
+    {
         match self {
             Left(x) => f(x),
             Right(_) => default,
@@ -1239,7 +1276,10 @@ impl<L, R> Either<L, R> {
     /// | `Right(x)` | `f(x)`    |
     #[inline]
     #[must_use]
-    pub fn right_map_or<T, F: FnOnce(R) -> T>(self, default: T, f: F) -> T {
+    pub fn right_map_or<T, F>(self, default: T, f: F) -> T
+    where
+        F: FnOnce(R) -> T,
+    {
         match self {
             Left(_) => default,
             Right(x) => f(x),
@@ -1396,7 +1436,10 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[doc(alias = "right_or_else")]
-    pub fn left_and_then<T, F: FnOnce(L) -> Either<T, R>>(self, f: F) -> Either<T, R> {
+    pub fn left_and_then<T, F>(self, f: F) -> Either<T, R>
+    where
+        F: FnOnce(L) -> Either<T, R>,
+    {
         match self {
             Left(x) => f(x),
             Right(x) => Right(x),
@@ -1415,7 +1458,10 @@ impl<L, R> Either<L, R> {
     #[inline]
     #[must_use]
     #[doc(alias = "left_or_else")]
-    pub fn right_and_then<T, F: FnOnce(R) -> Either<L, T>>(self, f: F) -> Either<L, T> {
+    pub fn right_and_then<T, F>(self, f: F) -> Either<L, T>
+    where
+        F: FnOnce(R) -> Either<L, T>,
+    {
         match self {
             Left(x) => Left(x),
             Right(x) => f(x),
